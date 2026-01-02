@@ -63,6 +63,7 @@ CREATE TABLE submissions (
 CREATE TABLE announcements (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
+    type ENUM('notice', 'class_change', 'exam', 'deadline') NOT NULL DEFAULT 'notice',
     message TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

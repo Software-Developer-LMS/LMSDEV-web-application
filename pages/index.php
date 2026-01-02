@@ -77,8 +77,21 @@
             </div>
 
             <!-- Form -->
-            <form class="mt-8 space-y-6" onsubmit="event.preventDefault();">
+            <form class="mt-8 space-y-6">
                 <div class="space-y-4">
+                    <!-- Error Message Display -->
+                    <?php if (isset($_GET['error'])): ?>
+                        <div class="p-3 bg-red-500/10 border border-red-500/50 rounded text-red-400 text-xs font-mono">
+                            > ERROR: Invalid credentials provided. Access denied.
+                        </div>
+                    <?php endif; ?>
+                    <?php if (isset($_GET['logout'])): ?>
+                        <div
+                            class="p-3 bg-green-500/10 border border-green-500/50 rounded text-green-400 text-xs font-mono">
+                            > SYSTEM: Session terminated successfully.
+                        </div>
+                    <?php endif; ?>
+
                     <!-- Email Field -->
                     <div class="input-group">
                         <label for="email-address"
@@ -87,7 +100,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fa-regular fa-envelope text-slate-500 transition-colors"></i>
                             </div>
-                            <input id="email-address" name="email" type="email" autocomplete="email" required
+                            <input id="email-address" name="email" type="email" autocomplete="email" 
                                 class="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-700 rounded-md leading-5 bg-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-slate-800 sm:text-sm transition-all duration-200"
                                 placeholder="dev@example.com">
                         </div>
@@ -105,7 +118,6 @@
                                 <i class="fa-solid fa-lock text-slate-500 transition-colors"></i>
                             </div>
                             <input id="password" name="password" type="password" autocomplete="current-password"
-                                required
                                 class="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-700 rounded-md leading-5 bg-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-slate-800 sm:text-sm transition-all duration-200"
                                 placeholder="••••••••">
                         </div>
@@ -121,7 +133,7 @@
                 </div>
 
                 <div>
-                    <button type="submit" onclick="handleLogin()"
+                    <button type="submit"
                         class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-sky-600 hover:bg-sky-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500 transition-all duration-200 shadow-[0_0_15px_rgba(14,165,233,0.3)] hover:shadow-[0_0_25px_rgba(14,165,233,0.5)]">
                         <span class="absolute left-0 inset-y-0 flex items-center pl-3">
                             <i class="fa-solid fa-code text-sky-200 group-hover:text-white transition-colors"></i>
@@ -425,10 +437,20 @@
         // Simple login feedback
         function handleLogin() {
             const btn = document.querySelector('button[type="submit"]');
-            const originalText = btn.innerHTML;
+            const form = document.querySelector('form');
+
+            // Basic validation
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Prevent double submission
+            if (btn.disabled) return;
 
             btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ACCESSING...`;
             btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btn.disabled = true;
 
             setTimeout(() => {
                 btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> ACCESS GRANTED`;
@@ -442,8 +464,20 @@
                 p.className = "text-emerald-400";
                 p.innerHTML = `> Auth token received. Redirecting...`;
                 term.insertBefore(p, term.lastElementChild);
+
+                // Submit the form to backend
+                form.action = "login_process.php";
+                form.method = "POST";
+                form.submit();
+
             }, 1500);
         }
+
+        // Prevent default form submission to handle it via button click
+        document.querySelector('form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            handleLogin();
+        });
     </script>
 </body>
 
