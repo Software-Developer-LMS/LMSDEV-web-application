@@ -215,4 +215,4 @@ $result = $conn->query($sql);
             alert("PROTOCOL ERROR: You must provide either a GitHub Link OR a Project File to transmit.");
         }
     });
-</script>
+
