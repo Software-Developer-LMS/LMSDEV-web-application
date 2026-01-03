@@ -9,8 +9,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $desc = $_POST['description'];
         $deadline = $_POST['deadline'];
 
-        $sql = "INSERT INTO assignments (module_id, title, description, deadline) 
-                VALUES ('$module_id', '$title', '$desc', '$deadline')";
+        $file_path = NULL;
+        if (isset($_FILES['assignment_file']) && $_FILES['assignment_file']['error'] == 0) {
+            $upload_dir = '../uploads/assignments/';
+            if (!is_dir($upload_dir))
+                mkdir($upload_dir, 0777, true);
+
+            $file_ext = pathinfo($_FILES['assignment_file']['name'], PATHINFO_EXTENSION);
+            $file_name = time() . '_' . uniqid() . '.' . $file_ext;
+
+            if (move_uploaded_file($_FILES['assignment_file']['tmp_name'], $upload_dir . $file_name)) {
+                $file_path = $file_name;
+            }
+        }
+
+        $sql = "INSERT INTO assignments (module_id, title, description, deadline, assignment_file) 
+                VALUES ('$module_id', '$title', '$desc', '$deadline', " . ($file_path ? "'$file_path'" : "NULL") . ")";
 
         if ($conn->query($sql) === TRUE) {
             $msg = "Objective set.";
@@ -22,7 +36,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $desc = $_POST['description'];
         $deadline = $_POST['deadline'];
 
-        $sql = "UPDATE assignments SET module_id='$module_id', title='$title', description='$desc', deadline='$deadline' WHERE id=$id";
+        $file_update_sql = "";
+        if (isset($_FILES['assignment_file']) && $_FILES['assignment_file']['error'] == 0) {
+            $upload_dir = '../uploads/assignments/';
+            if (!is_dir($upload_dir))
+                mkdir($upload_dir, 0777, true);
+
+            // Delete old file
+            $old_file_res = $conn->query("SELECT assignment_file FROM assignments WHERE id=$id");
+            if ($old_file_res->num_rows > 0) {
+                $old_file = $old_file_res->fetch_assoc()['assignment_file'];
+                if ($old_file && file_exists($upload_dir . $old_file)) {
+                    unlink($upload_dir . $old_file);
+                }
+            }
+
+            $file_ext = pathinfo($_FILES['assignment_file']['name'], PATHINFO_EXTENSION);
+            $file_name = time() . '_' . uniqid() . '.' . $file_ext;
+
+            if (move_uploaded_file($_FILES['assignment_file']['tmp_name'], $upload_dir . $file_name)) {
+                $file_update_sql = ", assignment_file='$file_name'";
+            }
+        }
+
+        $sql = "UPDATE assignments SET module_id='$module_id', title='$title', description='$desc', deadline='$deadline' $file_update_sql WHERE id=$id";
 
         if ($conn->query($sql) === TRUE) {
             echo "<script>window.location.href='?page=assignments&msg=updated';</script>";
@@ -50,12 +87,23 @@ if (isset($_GET['delete_id'])) {
                 $conn->query("UPDATE users SET legacy_xp = legacy_xp + $marks WHERE id = $uid");
             }
 
-            // B. Delete File
             if (!empty($sub_row['file_path'])) {
                 $file_full_path = '../uploads/' . $sub_row['file_path'];
                 if (file_exists($file_full_path)) {
                     unlink($file_full_path); // Delete file from server
                 }
+            }
+        }
+    }
+
+    // Delete Assignment File
+    $assign_file_res = $conn->query("SELECT assignment_file FROM assignments WHERE id=$id");
+    if ($assign_file_res->num_rows > 0) {
+        $assign_file = $assign_file_res->fetch_assoc()['assignment_file'];
+        if ($assign_file) {
+            $assign_file_path = '../uploads/assignments/' . $assign_file;
+            if (file_exists($assign_file_path)) {
+                unlink($assign_file_path);
             }
         }
     }
@@ -170,7 +218,7 @@ if (isset($_GET['edit_id'])) {
             <?php echo $edit_assign ? 'Modify Assessment' : 'New Assessment'; ?>
         </h3>
 
-        <form method="POST" class="space-y-4" action="?page=assignments">
+        <form method="POST" class="space-y-4" action="?page=assignments" enctype="multipart/form-data">
             <?php if ($edit_assign): ?>
                 <input type="hidden" name="id" value="<?php echo $edit_assign['id']; ?>">
             <?php endif; ?>
@@ -205,6 +253,19 @@ if (isset($_GET['edit_id'])) {
                 <label class="block text-xs text-gray-500 mb-1 uppercase">Detailed Instructions</label>
                 <textarea name="description"
                     class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-blue focus:outline-none font-mono text-xs h-24"><?php echo $edit_assign ? $edit_assign['description'] : ''; ?></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-500 mb-1 uppercase">Reference Material (PDF - Optional)</label>
+                <input type="file" name="assignment_file" accept=".pdf"
+                    class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-blue focus:outline-none font-mono text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-nexus-blue/10 file:text-nexus-blue hover:file:bg-nexus-blue/20">
+                <?php if ($edit_assign && $edit_assign['assignment_file']): ?>
+                    <div class="mt-1 text-xs text-nexus-green">
+                        Current file: <a href="../uploads/assignments/<?php echo $edit_assign['assignment_file']; ?>"
+                            target="_blank"
+                            class="underline hover:text-white"><?php echo $edit_assign['assignment_file']; ?></a>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="flex gap-4 mt-6">
