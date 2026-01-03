@@ -159,7 +159,7 @@
 
         <!-- Bottom copyright -->
         <div class="absolute bottom-4 text-xs text-slate-600">
-            &copy; 2026 zentryx Solutions. All systems functional.
+            &copy; 2026 Lumnix Solutions. All systems functional.
         </div>
     </div>
 
