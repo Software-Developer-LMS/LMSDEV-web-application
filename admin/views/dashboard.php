@@ -3,6 +3,46 @@ include '../includes/db_connection.php';
 // Dynamic Stats
 $student_count = $conn->query("SELECT COUNT(*) as count FROM users WHERE role='student'")->fetch_assoc()['count'];
 $module_count = $conn->query("SELECT COUNT(*) as count FROM modules")->fetch_assoc()['count'];
+// 1. Recent Submissions (Code_Stream)
+$rec_sub_sql = "SELECT s.*, u.name as student_name, a.title as assign_title 
+                FROM submissions s 
+                JOIN users u ON s.user_id = u.id 
+                JOIN assignments a ON s.assignment_id = a.id 
+                ORDER BY s.submitted_at DESC LIMIT 5";
+$recent_subs = $conn->query($rec_sub_sql);
+
+// 2. Grading Stats (Infrastructure_Load)
+$total_subs = $conn->query("SELECT COUNT(*) as count FROM submissions")->fetch_assoc()['count'];
+$graded_subs = $conn->query("SELECT COUNT(*) as count FROM submissions WHERE marks IS NOT NULL")->fetch_assoc()['count'];
+$grading_percentage = ($total_subs > 0) ? round(($graded_subs / $total_subs) * 100) : 0;
+
+// 3. Top Students (Student_Evolution)
+$top_students_sql = "SELECT * FROM users WHERE role='student' ORDER BY legacy_xp DESC LIMIT 3";
+$top_students = $conn->query($top_students_sql);
+
+// 4. System Logs (Terminal)
+$log_sql = "(SELECT 'New Recruit' as type, name as message, created_at FROM users WHERE role='student') 
+            UNION 
+            (SELECT 'New Directive' as type, title as message, created_at FROM assignments)
+            UNION
+            (SELECT 'Data Upload' as type, CONCAT(u.name, ' :: ', a.title) as message, s.submitted_at as created_at 
+             FROM submissions s 
+             JOIN users u ON s.user_id = u.id 
+             JOIN assignments a ON s.assignment_id = a.id)
+            ORDER BY created_at DESC LIMIT 20";
+$system_logs_result = $conn->query($log_sql);
+$system_logs_data = [];
+while ($row = $system_logs_result->fetch_assoc()) {
+    $system_logs_data[] = [
+        'time' => date('H:i:s', strtotime($row['created_at'])),
+        'type' => $row['type'],
+        'message' => $row['message'],
+        'color' => ($row['type'] == 'New Recruit') ? 'text-nexus-green' : (($row['type'] == 'Data Upload') ? 'text-yellow-500' : 'text-nexus-blue')
+    ];
+}
+$system_logs_data = array_reverse($system_logs_data);
+
+// Basic Stats
 $active_assigns = $conn->query("SELECT COUNT(*) as count FROM assignments WHERE deadline > NOW()")->fetch_assoc()['count'];
 ?>
 
@@ -76,51 +116,68 @@ $active_assigns = $conn->query("SELECT COUNT(*) as count FROM assignments WHERE 
             <!-- Commit Feed -->
             <div class="holo-card p-5 rounded-xl flex flex-col h-64">
                 <h3 class="text-xs font-bold text-nexus-blue mb-4 uppercase flex justify-between items-center">
-                    <span>Code_Stream</span>
+                    <span>Recent_Submissions</span>
                     <span class="w-2 h-2 rounded-full bg-nexus-green animate-pulse"></span>
                 </h3>
                 <div class="flex-1 overflow-y-auto space-y-3 pr-2 custom-scroll">
-                    <!-- Static Commit 1 -->
-                    <div class="group cursor-pointer">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-nexus-purple font-bold">Dev_Sarah</span>
-                            <span class="text-gray-600 font-mono">8f3a21</span>
-                        </div>
-                        <div class="text-gray-400 text-xs mb-1 group-hover:text-white transition-colors">
-                            Fixed memory leak in core loop
-                        </div>
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-nexus-green bg-nexus-green/10 px-1 rounded">+12 -4</span>
-                            <span class="text-gray-600">2m ago</span>
-                        </div>
-                    </div>
+                    <?php if ($recent_subs->num_rows > 0): ?>
+                        <?php while ($sub = $recent_subs->fetch_assoc()): ?>
+                            <div class="group cursor-pointer hover:bg-white/5 p-2 rounded transition-colors">
+                                <div class="flex justify-between text-xs mb-1">
+                                    <span
+                                        class="text-nexus-purple font-bold"><?php echo htmlspecialchars($sub['student_name']); ?></span>
+                                    <span class="text-gray-600 font-mono">ID:<?php echo $sub['user_id']; ?></span>
+                                </div>
+                                <div class="text-gray-400 text-xs mb-1 group-hover:text-white transition-colors">
+                                    Submitted: <?php echo htmlspecialchars($sub['assign_title']); ?>
+                                </div>
+                                <div class="flex justify-between items-center text-[10px]">
+                                    <span
+                                        class="<?php echo $sub['marks'] ? 'text-nexus-green bg-nexus-green/10' : 'text-yellow-500 bg-yellow-500/10'; ?> px-1 rounded">
+                                        <?php echo $sub['marks'] ? 'GRADED: ' . $sub['marks'] : 'PENDING REVIEW'; ?>
+                                    </span>
+                                    <span
+                                        class="text-gray-600"><?php echo date('M d H:i', strtotime($sub['submitted_at'])); ?></span>
+                                </div>
+                            </div>
+                        <?php endwhile; ?>
+                    <?php else: ?>
+                        <div class="text-gray-500 text-xs text-center mt-4">No recent submissions detected.</div>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <!-- Server Infrastructure -->
             <div class="holo-card p-5 rounded-xl h-64 relative">
-                <h3 class="text-xs font-bold text-nexus-purple mb-4 uppercase">Infrastructure_Load</h3>
+                <h3 class="text-xs font-bold text-nexus-purple mb-4 uppercase">Grading_Status</h3>
 
                 <div class="flex items-end justify-between h-32 px-4 gap-4 mt-8">
                     <!-- Bars -->
                     <div class="w-full bg-nexus-blue/10 rounded-t-lg relative group h-full overflow-hidden">
                         <div class="absolute bottom-0 left-0 right-0 bg-nexus-blue/50 transition-all duration-1000 group-hover:bg-nexus-blue"
-                            style="height: 45%"></div>
-                        <div class="absolute bottom-2 left-0 right-0 text-center text-[10px] text-white">CPU</div>
+                            style="height: 100%"></div>
+                        <div class="absolute bottom-2 left-0 right-0 text-center text-[10px] text-white">TOTAL</div>
+                        <div class="absolute top-2 left-0 right-0 text-center text-xs font-bold text-white">
+                            <?php echo $total_subs; ?></div>
                     </div>
                     <div class="w-full bg-nexus-green/10 rounded-t-lg relative group h-full overflow-hidden">
                         <div class="absolute bottom-0 left-0 right-0 bg-nexus-green/50 transition-all duration-1000 group-hover:bg-nexus-green"
-                            style="height: 62%"></div>
-                        <div class="absolute bottom-2 left-0 right-0 text-center text-[10px] text-white">RAM</div>
+                            style="height: <?php echo $grading_percentage; ?>%"></div>
+                        <div class="absolute bottom-2 left-0 right-0 text-center text-[10px] text-white">DONE</div>
+                        <div class="absolute top-2 left-0 right-0 text-center text-xs font-bold text-white">
+                            <?php echo $graded_subs; ?></div>
                     </div>
                     <div class="w-full bg-nexus-purple/10 rounded-t-lg relative group h-full overflow-hidden">
                         <div class="absolute bottom-0 left-0 right-0 bg-nexus-purple/50 transition-all duration-1000 group-hover:bg-nexus-purple"
-                            style="height: 42%"></div>
-                        <div class="absolute bottom-2 left-0 right-0 text-center text-[10px] text-white">NET</div>
+                            style="height: <?php echo 100 - $grading_percentage; ?>%"></div>
+                        <div class="absolute bottom-2 left-0 right-0 text-center text-[10px] text-white">PENDING</div>
+                        <div class="absolute top-2 left-0 right-0 text-center text-xs font-bold text-white">
+                            <?php echo $total_subs - $graded_subs; ?></div>
                     </div>
                 </div>
                 <div class="mt-4 text-center text-xs text-gray-500">
-                    Total Load: 42% <span class="text-nexus-green ml-2">[OPTIMAL]</span>
+                    Completion: <?php echo $grading_percentage; ?>% <span
+                        class="text-nexus-green ml-2">[<?php echo ($grading_percentage == 100) ? 'COMPLETE' : 'IN_PROGRESS'; ?>]</span>
                 </div>
             </div>
 
@@ -130,67 +187,75 @@ $active_assigns = $conn->query("SELECT COUNT(*) as count FROM assignments WHERE 
     <!-- COLUMN 2: Sidebar Widgets (4 cols) -->
     <div class="col-span-1 md:col-span-4 flex flex-col gap-6">
 
-        <!-- DNA HELIX (Student Progress) -->
-        <div class="holo-card p-5 rounded-xl h-64 relative overflow-hidden">
-            <h3 class="text-xs font-bold text-white mb-2 uppercase">Student_Evolution</h3>
-            <div class="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
-                <!-- SVG BG DNA -->
-                <svg width="200" height="200" viewBox="0 0 100 100">
-                    <path d="M30 0 Q70 25 30 50 T30 100" stroke="#00D4FF" fill="none" stroke-width="2" />
-                    <path d="M70 0 Q30 25 70 50 T70 100" stroke="#00FF9D" fill="none" stroke-width="2" />
-                    <!-- Connection Lines -->
-                    <line x1="30" y1="10" x2="70" y2="10" stroke="#444" stroke-width="1" />
-                    <line x1="45" y1="25" x2="55" y2="25" stroke="#444" stroke-width="1" />
-                    <line x1="30" y1="40" x2="70" y2="40" stroke="#444" stroke-width="1" />
-                </svg>
-            </div>
-            <div class="relative z-10 mt-10 space-y-4">
-                <div class="bg-black/50 p-3 rounded border border-gray-800">
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-nexus-blue">Theory</span>
-                        <span class="text-white">84%</span>
+        <!-- TOP STUDENTS (Leaderboard) -->
+        <div class="holo-card p-5 rounded-xl h-64 relative overflow-hidden flex flex-col">
+            <h3 class="text-xs font-bold text-white mb-4 uppercase">Top_Operatives</h3>
+            <div class="flex-1 overflow-y-auto space-y-3 custom-scroll pr-1">
+                <?php $rank = 1;
+                while ($st = $top_students->fetch_assoc()): ?>
+                    <div class="flex items-center gap-3 p-2 bg-white/5 rounded border border-white/5">
+                        <div class="text-nexus-blue font-bold text-sm w-4">#<?php echo $rank++; ?></div>
+                        <div class="flex-1">
+                            <div class="text-white text-xs font-bold"><?php echo htmlspecialchars($st['name']); ?></div>
+                            <div class="text-gray-500 text-[10px] uppercase">XP: <?php echo $st['legacy_xp']; ?></div>
+                        </div>
+                        <i class="fa-solid fa-trophy text-yellow-500 text-xs"></i>
                     </div>
-                    <div class="w-full h-1 bg-gray-800 rounded">
-                        <div class="h-full bg-nexus-blue w-[84%]"></div>
-                    </div>
-                </div>
-                <div class="bg-black/50 p-3 rounded border border-gray-800">
-                    <div class="flex justify-between text-xs mb-1">
-                        <span class="text-nexus-green">Practical</span>
-                        <span class="text-white">91%</span>
-                    </div>
-                    <div class="w-full h-1 bg-gray-800 rounded">
-                        <div class="h-full bg-nexus-green w-[91%]"></div>
-                    </div>
-                </div>
+                <?php endwhile; ?>
             </div>
         </div>
 
-        <!-- SYSTEM TERMINAL -->
+        <!-- SYSTEM LOGS (Animated) -->
         <div class="holo-card p-0 rounded-xl flex-1 flex flex-col min-h-[300px] bg-black">
             <div class="bg-gray-900 px-4 py-2 text-[10px] text-gray-500 border-b border-gray-800 flex justify-between">
-                <span>TERMINAL_OUTPUT</span>
-                <span>bash - 80x24</span>
+                <span>SYSTEM_LOGS</span>
+                <span>tail -f /var/log/sys</span>
             </div>
-            <div class="p-4 font-mono text-xs space-y-2 overflow-y-auto flex-1 text-gray-400">
-                <!-- Static Log 1 -->
-                <div>
-                    <span class="text-gray-600">[14:02:01]</span>
-                    <span class="text-nexus-blue">INFO:</span>
-                    <span>Connection established on port 8080</span>
-                </div>
-                <!-- Static Log 2 -->
-                <div>
-                    <span class="text-gray-600">[14:02:05]</span>
-                    <span class="text-nexus-green">SUCCESS:</span>
-                    <span>Neural API handshake complete</span>
-                </div>
-                <div class="flex mt-2 animate-pulse">
+            <div id="terminal-content"
+                class="p-4 font-mono text-xs space-y-2 overflow-y-auto flex-1 text-gray-400 custom-scroll relative">
+                <!-- JS will inject logs here -->
+            </div>
+            <!-- Pulse Cursor -->
+            <div class="px-4 pb-2">
+                <div class="flex animate-pulse">
                     <span class="text-nexus-green mr-2">admin@nexus:~$</span>
                     <span class="w-2 h-4 bg-nexus-green block"></span>
                 </div>
             </div>
         </div>
+
+        <script>
+            // Data from PHP
+            const logData = <?php echo json_encode($system_logs_data); ?>;
+            const terminal = document.getElementById('terminal-content');
+
+            function typeLog(log, index) {
+                const line = document.createElement('div');
+                line.className = "border-l-2 border-gray-800 pl-2 opacity-0 transition-opacity duration-300";
+
+                const timeSpan = `<span class="text-gray-600">[${log.time}]</span>`;
+                const typeSpan = `<span class="${log.color} uppercase">${log.type}:</span>`;
+                const msgSpan = `<span class="text-gray-300 typing-effect">${log.message}</span>`;
+
+                line.innerHTML = `${timeSpan} ${typeSpan} ${msgSpan}`;
+                terminal.appendChild(line);
+
+                // Reveal line
+                setTimeout(() => {
+                    line.classList.remove('opacity-0');
+                    terminal.scrollTop = terminal.scrollHeight; // Auto scroll
+                }, 100);
+            }
+
+            // Animate logs
+            let delay = 0;
+            logData.forEach((log, index) => {
+                setTimeout(() => {
+                    typeLog(log, index);
+                }, delay);
+                delay += 800; // 800ms delay between lines for "reading" speed
+            });
+        </script>
 
     </div>
 </div>
