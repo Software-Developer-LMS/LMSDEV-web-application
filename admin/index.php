@@ -1,10 +1,18 @@
+<?php
+session_start();
+// Check if user is logged in and is admin
+if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'admin') {
+    header("Location: ../pages/index.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Core | v3.1.0</title>
+    <title>Infralyx Admin Panel | v3.1.0</title>
 
     <!-- FONTS: JetBrains Mono (Code) & Rajdhani (Headers) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -189,7 +197,7 @@
     <!-- BOOT SEQUENCE (JS Controlled) -->
     <div id="boot-sequence" class="fixed inset-0 z-[100] bg-nexus-black flex flex-col items-center justify-center">
         <div class="w-96 space-y-2">
-            <div id="boot-1" class="text-nexus-blue hidden">[SYSTEM] Nexus Core v3.1.0 initializing...</div>
+            <div id="boot-1" class="text-nexus-blue hidden">[SYSTEM] Infralyx Admin Panel v3.1.0 initializing...</div>
             <div id="boot-2" class="text-nexus-green hidden">> Loading modules... OK</div>
             <div id="boot-3" class="text-nexus-green hidden">> Establishing secure link... OK</div>
             <div id="boot-4" class="text-white font-bold mt-4 hidden tracking-widest">ACCESS GRANTED</div>
@@ -228,12 +236,14 @@
         <aside
             class="w-16 md:w-20 border-r border-gray-800 bg-nexus-dark flex flex-col items-center py-6 z-40 relative">
             <!-- Logo -->
-            <div class="mb-10 text-nexus-blue animate-pulse-fast">
+            <a href="?page=dashboard"
+                class="mb-10 text-nexus-blue animate-pulse-fast block hover:scale-110 transition-transform"
+                title="Go to Dashboard">
                 <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                 </svg>
-            </div>
+            </a>
 
             <!-- Nav Icons -->
             <nav class="space-y-6 flex-1 w-full flex flex-col items-center">
@@ -295,9 +305,12 @@
             </nav>
 
             <!-- Bottom Action -->
-            <div class="mb-4 cursor-pointer text-gray-600 hover:text-nexus-red">
+            <a href="change_password.php" class="mb-4 cursor-pointer text-gray-600 hover:text-nexus-blue">
+                <i class="fa-solid fa-key text-xl"></i>
+            </a>
+            <a href="../pages/logout.php" class="mb-4 cursor-pointer text-gray-600 hover:text-nexus-red">
                 <i class="fa-solid fa-power-off text-xl"></i>
-            </div>
+            </a>
         </aside>
 
         <!-- CONTENT AREA -->
@@ -308,7 +321,7 @@
                 class="h-16 border-b border-gray-800 bg-nexus-black/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0">
                 <div class="flex items-center gap-4">
                     <h1 class="text-xl font-header tracking-widest text-white uppercase glitch-hover cursor-default">
-                        Nexus<span class="text-nexus-blue">Core</span>
+                        Infralyx<span class="text-nexus-blue">Panel</span>
                     </h1>
                     <div class="h-4 w-px bg-gray-700"></div>
                     <button onclick="toggleCmd()"

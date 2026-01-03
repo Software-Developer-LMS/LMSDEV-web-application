@@ -1,3 +1,11 @@
+<?php
+include '../includes/db_connection.php';
+// Dynamic Stats
+$student_count = $conn->query("SELECT COUNT(*) as count FROM users WHERE role='student'")->fetch_assoc()['count'];
+$module_count = $conn->query("SELECT COUNT(*) as count FROM modules")->fetch_assoc()['count'];
+$active_assigns = $conn->query("SELECT COUNT(*) as count FROM assignments WHERE deadline > NOW()")->fetch_assoc()['count'];
+?>
+
 <div class="grid grid-cols-1 md:grid-cols-12 gap-6 pb-20">
 
     <!-- COLUMN 1: Main Visuals (8 cols) -->
@@ -18,10 +26,12 @@
                     style="animation-direction: reverse;"></div>
                 <div class="absolute inset-0 flex items-center justify-center">
                     <div class="text-center z-10">
-                        <div class="text-4xl font-bold text-white mb-1">128</div>
+                        <div class="text-4xl font-bold text-white mb-1">
+                            <?php echo $student_count; ?>
+                        </div>
                         <div
                             class="text-[10px] uppercase text-nexus-blue tracking-widest bg-nexus-black/80 px-2 rounded">
-                            Active Nodes</div>
+                            Active Operatives</div>
                     </div>
                 </div>
                 <!-- Decorative Orbital Rings -->
@@ -37,31 +47,25 @@
             <div class="absolute bottom-4 right-4 flex flex-col gap-2">
                 <!-- Static Data Row 1 -->
                 <div class="flex items-center justify-end gap-2 text-xs font-mono">
-                    <span class="text-gray-400">Full Stack Alpha</span>
+                    <span class="text-gray-400">Modules Online</span>
                     <div class="w-20 h-1 bg-gray-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-nexus-green" style="width: 88%"></div>
+                        <div class="h-full bg-nexus-green" style="width: <?php echo min(100, $module_count * 10); ?>%">
+                        </div>
                     </div>
+                    <span class="text-nexus-green">
+                        <?php echo $module_count; ?>
+                    </span>
                 </div>
                 <!-- Static Data Row 2 -->
                 <div class="flex items-center justify-end gap-2 text-xs font-mono">
-                    <span class="text-gray-400">CyberSec Delta</span>
+                    <span class="text-gray-400">Active Missions</span>
                     <div class="w-20 h-1 bg-gray-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-nexus-purple" style="width: 45%"></div>
+                        <div class="h-full bg-nexus-purple"
+                            style="width: <?php echo min(100, $active_assigns * 10); ?>%"></div>
                     </div>
-                </div>
-                <!-- Static Data Row 3 -->
-                <div class="flex items-center justify-end gap-2 text-xs font-mono">
-                    <span class="text-gray-400">AI Neural Net</span>
-                    <div class="w-20 h-1 bg-gray-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-nexus-green" style="width: 92%"></div>
-                    </div>
-                </div>
-                <!-- Static Data Row 4 -->
-                <div class="flex items-center justify-end gap-2 text-xs font-mono">
-                    <span class="text-gray-400">Blockchain Zeta</span>
-                    <div class="w-20 h-1 bg-gray-800 rounded-full overflow-hidden">
-                        <div class="h-full bg-red-500" style="width: 12%"></div>
-                    </div>
+                    <span class="text-nexus-purple">
+                        <?php echo $active_assigns; ?>
+                    </span>
                 </div>
             </div>
         </div>
@@ -88,48 +92,6 @@
                         <div class="flex justify-between items-center text-[10px]">
                             <span class="text-nexus-green bg-nexus-green/10 px-1 rounded">+12 -4</span>
                             <span class="text-gray-600">2m ago</span>
-                        </div>
-                    </div>
-                    <!-- Static Commit 2 -->
-                    <div class="group cursor-pointer">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-nexus-purple font-bold">Ghost_Coder</span>
-                            <span class="text-gray-600 font-mono">7b2c99</span>
-                        </div>
-                        <div class="text-gray-400 text-xs mb-1 group-hover:text-white transition-colors">
-                            Refactored auth middleware
-                        </div>
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-nexus-green bg-nexus-green/10 px-1 rounded">+45 -120</span>
-                            <span class="text-gray-600">5m ago</span>
-                        </div>
-                    </div>
-                    <!-- Static Commit 3 -->
-                    <div class="group cursor-pointer">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-nexus-purple font-bold">Neo_Jr</span>
-                            <span class="text-gray-600 font-mono">1a9f44</span>
-                        </div>
-                        <div class="text-gray-400 text-xs mb-1 group-hover:text-white transition-colors">
-                            Updated encryption keys
-                        </div>
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-nexus-green bg-nexus-green/10 px-1 rounded">+2 -2</span>
-                            <span class="text-gray-600">12m ago</span>
-                        </div>
-                    </div>
-                    <!-- Static Commit 4 -->
-                    <div class="group cursor-pointer">
-                        <div class="flex justify-between text-xs mb-1">
-                            <span class="text-nexus-purple font-bold">Trinity_X</span>
-                            <span class="text-gray-600 font-mono">9c8d11</span>
-                        </div>
-                        <div class="text-gray-400 text-xs mb-1 group-hover:text-white transition-colors">
-                            Deployed hotfix for Sector 7
-                        </div>
-                        <div class="flex justify-between items-center text-[10px]">
-                            <span class="text-nexus-green bg-nexus-green/10 px-1 rounded">+1 -0</span>
-                            <span class="text-gray-600">15m ago</span>
                         </div>
                     </div>
                 </div>
@@ -222,18 +184,6 @@
                     <span class="text-gray-600">[14:02:05]</span>
                     <span class="text-nexus-green">SUCCESS:</span>
                     <span>Neural API handshake complete</span>
-                </div>
-                <!-- Static Log 3 -->
-                <div>
-                    <span class="text-gray-600">[14:03:12]</span>
-                    <span class="text-nexus-purple">WARN:</span>
-                    <span>High latency detected in Sector 7</span>
-                </div>
-                <!-- Static Log 4 -->
-                <div>
-                    <span class="text-gray-600">[14:04:00]</span>
-                    <span class="text-nexus-blue">INFO:</span>
-                    <span>Garbage collection cycle started</span>
                 </div>
                 <div class="flex mt-2 animate-pulse">
                     <span class="text-nexus-green mr-2">admin@nexus:~$</span>

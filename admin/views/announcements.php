@@ -1,32 +1,67 @@
 <?php
 include '../includes/db_connection.php';
 
-// Handle Add Announcement
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_announcement'])) {
-    $title = $_POST['title'];
-    $type = $_POST['type'];
-    $msg = $_POST['message'];
+// Handle Add/Update Announcement
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (isset($_POST['add_announcement'])) {
+        $title = $_POST['title'];
+        $type = $_POST['type'];
+        $msg = $_POST['message'];
 
-    $sql = "INSERT INTO announcements (title, type, message) VALUES ('$title', '$type', '$msg')";
+        $sql = "INSERT INTO announcements (title, type, message) VALUES ('$title', '$type', '$msg')";
 
-    if ($conn->query($sql) === TRUE) {
-        $success = "Broadcast sent.";
+        if ($conn->query($sql) === TRUE) {
+            $success = "Broadcast sent.";
+        }
+    } elseif (isset($_POST['update_announcement'])) {
+        $id = intval($_POST['id']);
+        $title = $_POST['title'];
+        $type = $_POST['type'];
+        $msg = $_POST['message'];
+
+        $sql = "UPDATE announcements SET title='$title', type='$type', message='$msg' WHERE id=$id";
+
+        if ($conn->query($sql) === TRUE) {
+            echo "<script>window.location.href='?page=announcements&msg=updated';</script>";
+        } else {
+            $error = "Error: " . $conn->error;
+        }
     }
+}
+
+// Handle Delete Announcement
+if (isset($_GET['delete_id'])) {
+    $id = intval($_GET['delete_id']);
+    $conn->query("DELETE FROM announcements WHERE id=$id");
+    echo "<script>window.location.href='?page=announcements';</script>";
 }
 
 // Fetch Announcements
 $result = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC");
+
+// Handle Edit Fetch
+$edit_announce = null;
+if (isset($_GET['edit_id'])) {
+    $id = intval($_GET['edit_id']);
+    $edit_announce = $conn->query("SELECT * FROM announcements WHERE id=$id")->fetch_assoc();
+}
 ?>
 
 <div class="flex flex-col gap-6">
     <div class="flex justify-between items-center">
         <h2 class="text-2xl font-header font-bold text-white uppercase tracking-widest"><span
                 class="text-nexus-green">System</span>_Broadcasts</h2>
-        <button onclick="document.getElementById('addAnnounceModal').classList.remove('hidden')"
+        <a href="?page=announcements&add_new=1"
             class="bg-nexus-green/10 border border-nexus-green text-nexus-green px-4 py-2 rounded hover:bg-nexus-green hover:text-nexus-black transition-colors font-bold uppercase text-xs tracking-wider">
             + New Transmission
-        </button>
+        </a>
     </div>
+
+    <?php if (isset($success) || isset($_GET['msg'])): ?>
+        <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
+            > SUCCESS: <?php echo isset($success) ? $success : "Broadcast updated successfully."; ?>
+        </div>
+    <?php endif; ?>
 
     <!-- Feed -->
     <div class="space-y-4">
@@ -73,35 +108,51 @@ $result = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC");
                     </p>
                 </div>
 
-                <button class="text-gray-600 hover:text-nexus-red transition-colors self-start"><i
-                        class="fa-solid fa-xmark"></i></button>
+                <div class="flex flex-col gap-2">
+                    <a href="?page=announcements&edit_id=<?php echo $row['id']; ?>"
+                        class="text-gray-600 hover:text-white self-center"><i class="fa-solid fa-pen"></i></a>
+                    <a href="?page=announcements&delete_id=<?php echo $row['id']; ?>"
+                        onclick="return confirm('Cease broadcast?')"
+                        class="text-gray-600 hover:text-nexus-red transition-colors self-center"><i
+                            class="fa-solid fa-xmark"></i></a>
+                </div>
             </div>
         <?php endwhile; ?>
     </div>
 </div>
 
-<!-- Add Announcement Modal -->
+<!-- Add/Edit Announcement Modal -->
 <div id="addAnnounceModal"
-    class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center">
+    class="fixed inset-0 z-50 <?php echo (isset($_GET['add_new']) || isset($_GET['edit_id'])) ? '' : 'hidden'; ?> bg-black/80 backdrop-blur-sm flex items-center justify-center">
     <div class="holo-card w-full max-w-lg p-6 rounded-xl relative border-nexus-green/30">
-        <h3 class="text-xl font-header font-bold text-white mb-6 uppercase border-b border-gray-800 pb-2">Inject System
-            Message</h3>
+        <h3 class="text-xl font-header font-bold text-white mb-6 uppercase border-b border-gray-800 pb-2">
+            <?php echo $edit_announce ? 'Modify Broadcast' : 'Inject System Message'; ?>
+        </h3>
 
-        <form method="POST" class="space-y-4">
+        <form method="POST" class="space-y-4" action="?page=announcements">
+            <?php if ($edit_announce): ?>
+                <input type="hidden" name="id" value="<?php echo $edit_announce['id']; ?>">
+            <?php endif; ?>
+
             <div class="flex gap-4">
                 <div class="flex-1">
                     <label class="block text-xs text-gray-500 mb-1 uppercase">Header</label>
                     <input type="text" name="title" required
+                        value="<?php echo $edit_announce ? $edit_announce['title'] : ''; ?>"
                         class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-green focus:outline-none font-mono text-xs">
                 </div>
                 <div class="w-1/3">
                     <label class="block text-xs text-gray-500 mb-1 uppercase">Category</label>
                     <select name="type"
                         class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-green focus:outline-none font-mono text-xs">
-                        <option value="notice">General Notice</option>
-                        <option value="class_change">Class Update</option>
-                        <option value="exam">Examination</option>
-                        <option value="deadline">Critical Deadline</option>
+                        <?php
+                        $types = ['notice' => 'General Notice', 'class_change' => 'Class Update', 'exam' => 'Examination', 'deadline' => 'Critical Deadline'];
+                        foreach ($types as $val => $label):
+                            ?>
+                            <option value="<?php echo $val; ?>" <?php echo ($edit_announce && $edit_announce['type'] == $val) ? 'selected' : ''; ?>>
+                                <?php echo $label; ?>
+                            </option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
             </div>
@@ -109,15 +160,18 @@ $result = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC");
             <div>
                 <label class="block text-xs text-gray-500 mb-1 uppercase">Message Content</label>
                 <textarea name="message" required
-                    class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-green focus:outline-none font-mono text-xs h-32"></textarea>
+                    class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-green focus:outline-none font-mono text-xs h-32"><?php echo $edit_announce ? $edit_announce['message'] : ''; ?></textarea>
             </div>
 
             <div class="flex gap-4 mt-6">
-                <button type="submit" name="add_announcement"
-                    class="flex-1 bg-nexus-green text-nexus-black font-bold py-2 rounded hover:bg-white transition-colors uppercase text-xs tracking-wider">Broadcast</button>
-                <button type="button" onclick="document.getElementById('addAnnounceModal').classList.add('hidden')"
-                    class="flex-1 border border-gray-700 text-gray-500 font-bold py-2 rounded hover:text-white transition-colors uppercase text-xs tracking-wider">Cancel</button>
+                <button type="submit" name="<?php echo $edit_announce ? 'update_announcement' : 'add_announcement'; ?>"
+                    class="flex-1 bg-nexus-green text-nexus-black font-bold py-2 rounded hover:bg-white transition-colors uppercase text-xs tracking-wider">
+                    <?php echo $edit_announce ? 'Update Broadcast' : 'Broadcast'; ?>
+                </button>
+                <a href="?page=announcements"
+                    class="flex-1 border border-gray-700 text-gray-500 font-bold py-2 rounded hover:text-white transition-colors uppercase text-xs tracking-wider text-center">Cancel</a>
             </div>
         </form>
+        <!-- Last line of the modal -->
     </div>
 </div>

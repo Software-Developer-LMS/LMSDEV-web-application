@@ -81,9 +81,15 @@
                 <div class="space-y-4">
                     <!-- Error Message Display -->
                     <?php if (isset($_GET['error'])): ?>
-                        <div class="p-3 bg-red-500/10 border border-red-500/50 rounded text-red-400 text-xs font-mono">
-                            > ERROR: Invalid credentials provided. Access denied.
-                        </div>
+                        <?php if ($_GET['error'] == 'deactivated'): ?>
+                            <div class="p-3 bg-red-500/10 border border-red-500/50 rounded text-red-400 text-xs font-mono mb-4">
+                                > ERROR: Profile deactivated. Contact Admin.
+                            </div>
+                        <?php else: ?>
+                            <div class="p-3 bg-red-500/10 border border-red-500/50 rounded text-red-400 text-xs font-mono">
+                                > ERROR: Invalid credentials provided. Access denied.
+                            </div>
+                        <?php endif; ?>
                     <?php endif; ?>
                     <?php if (isset($_GET['logout'])): ?>
                         <div
@@ -100,7 +106,7 @@
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <i class="fa-regular fa-envelope text-slate-500 transition-colors"></i>
                             </div>
-                            <input id="email-address" name="email" type="email" autocomplete="email" 
+                            <input id="email-address" name="email" type="email" autocomplete="email" required
                                 class="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-700 rounded-md leading-5 bg-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-slate-800 sm:text-sm transition-all duration-200"
                                 placeholder="dev@example.com">
                         </div>
@@ -118,6 +124,7 @@
                                 <i class="fa-solid fa-lock text-slate-500 transition-colors"></i>
                             </div>
                             <input id="password" name="password" type="password" autocomplete="current-password"
+                                required
                                 class="appearance-none block w-full pl-10 pr-3 py-3 border border-slate-700 rounded-md leading-5 bg-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 focus:bg-slate-800 sm:text-sm transition-all duration-200"
                                 placeholder="••••••••">
                         </div>
