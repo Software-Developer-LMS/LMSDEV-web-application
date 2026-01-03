@@ -131,33 +131,6 @@
                 </div>
             </form>
 
-            <!-- Social Login -->
-            <!-- <div class="mt-6">
-                <div class="relative">
-                    <div class="absolute inset-0 flex items-center">
-                        <div class="w-full border-t border-slate-700"></div>
-                    </div>
-                    <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-slate-900 text-slate-500">Or continue with</span>
-                    </div>
-                </div>
-
-                <div class="mt-6 grid grid-cols-2 gap-3">
-                    <div>
-                        <a href="#" class="w-full inline-flex justify-center py-2.5 px-4 border border-slate-700 rounded-md shadow-sm bg-slate-800 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                            <i class="fa-brands fa-github text-xl mr-2"></i>
-                            <span class="self-center">GitHub</span>
-                        </a>
-                    </div>
-                    <div>
-                        <a href="#" class="w-full inline-flex justify-center py-2.5 px-4 border border-slate-700 rounded-md shadow-sm bg-slate-800 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
-                            <i class="fa-brands fa-google text-xl mr-2"></i>
-                            <span class="self-center">Google</span>
-                        </a>
-                    </div>
-                </div>
-            </div> -->
-
             <!-- Terminal Output Style Footer -->
             <div class="mt-8 p-3 bg-black rounded border border-slate-800 font-mono text-xs text-green-400 opacity-70">
                 <p>> System ready...</p>
@@ -167,7 +140,7 @@
 
         <!-- Bottom copyright -->
         <div class="absolute bottom-4 text-xs text-slate-600">
-            &copy; 2024 DevAccess Inc. All systems functional.
+            &copy; 2026 zentryx Solutions. All systems functional.
         </div>
     </div>
 
@@ -188,23 +161,8 @@
                 <span class="text-xs text-slate-500 font-mono">server.js</span>
             </div>
             <!-- Code Content -->
-            <div class="p-4 font-mono text-xs leading-relaxed text-slate-300">
-                <p><span class="text-purple-400">const</span> <span class="text-blue-400">DevAccess</span> = <span
-                        class="text-yellow-300">require</span>('<span class="text-green-400">@dev/core</span>');</p>
-                <br>
-                <p><span class="text-slate-500">// Initialize secure connection</span></p>
-                <p><span class="text-purple-400">await</span> DevAccess.<span class="text-blue-400">connect</span>({</p>
-                <p class="pl-4">mode: <span class="text-green-400">'turbo'</span>,</p>
-                <p class="pl-4">sync: <span class="text-purple-400">true</span>,</p>
-                <p class="pl-4">encryption: <span class="text-green-400">'AES-256'</span></p>
-                <p>});</p>
-                <br>
-                <p><span class="text-blue-400">console</span>.<span class="text-yellow-300">log</span>(<span
-                        class="text-green-400">"System Online 🚀"</span>);</p>
-                <div class="mt-2 flex gap-1">
-                    <span class="text-sky-400">➜</span>
-                    <span class="animate-pulse">_</span>
-                </div>
+            <div id="code-container" class="p-4 font-mono text-xs leading-relaxed text-slate-300 min-h-[200px]">
+                <!-- Typewriter content will appear here -->
             </div>
         </div>
 
@@ -215,169 +173,278 @@
             class="absolute inset-0 z-10 flex flex-col justify-end p-12 pointer-events-none bg-gradient-to-t from-slate-950 via-transparent to-transparent">
             <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">Build the Future.</h1>
             <img src="../assets/logo/software_developer_logo.png" alt="" class="w-32 mt-2">
-            <!-- <p class="text-slate-400 max-w-md">Access your dashboard to deploy, monitor, and scale your applications with our next-gen infrastructure.</p> -->
         </div>
-        </div>
+    </div>
 
-        <script>
-            // --- Particle Network Animation Logic ---
-            const canvas = document.getElementById('homeCanvas');
-            const ctx = canvas.getContext('2d');
-            let width, height;
-            let particles = [];
+    <script>
+        // --- Typewriter Effect Logic ---
+        const codeContainer = document.getElementById('code-container');
 
-            // Configuration
-            const particleCount = 100; // Number of dots
-            const connectionDistance = 150; // Max distance to draw line
-            const mouseDistance = 200; // Interaction radius
+        // Data structure: Array of lines. Each line is an array of segments.
+        // null represents a line break / empty line spacing
+        const codeLines = [
+            [   // Line 1
+                { text: "const ", class: "text-purple-400" },
+                { text: "DevAccess", class: "text-blue-400" },
+                { text: " = ", class: "text-white" },
+                { text: "require", class: "text-yellow-300" },
+                { text: "('", class: "text-white" },
+                { text: "@dev/core", class: "text-green-400" },
+                { text: "');", class: "text-white" }
+            ],
+            null, // Spacer
+            [   // Line 3
+                { text: "// Initialize secure connection", class: "text-slate-500" }
+            ],
+            [   // Line 4
+                { text: "await ", class: "text-purple-400" },
+                { text: "DevAccess.", class: "text-white" },
+                { text: "connect", class: "text-blue-400" },
+                { text: "({", class: "text-white" }
+            ],
+            [   // Line 5
+                { text: "  mode: ", class: "text-white pl-4" },
+                { text: "'turbo'", class: "text-green-400" },
+                { text: ",", class: "text-white" }
+            ],
+            [   // Line 6
+                { text: "  sync: ", class: "text-white pl-4" },
+                { text: "true", class: "text-purple-400" },
+                { text: ",", class: "text-white" }
+            ],
+            [   // Line 7
+                { text: "  encryption: ", class: "text-white pl-4" },
+                { text: "'AES-256'", class: "text-green-400" }
+            ],
+            [   // Line 8
+                { text: "});", class: "text-white" }
+            ],
+            null, // Spacer
+            [   // Line 10
+                { text: "console", class: "text-blue-400" },
+                { text: ".", class: "text-white" },
+                { text: "log", class: "text-yellow-300" },
+                { text: "(", class: "text-white" },
+                { text: "\"System Online 🚀\"", class: "text-green-400" },
+                { text: ");", class: "text-white" }
+            ]
+        ];
 
-            // Mouse state
-            let mouse = { x: null, y: null };
+        let cursorElement = document.createElement('span');
+        cursorElement.className = "text-sky-400 animate-pulse ml-1";
+        cursorElement.textContent = "_";
 
-            // Resize handler
-            function resize() {
-                width = canvas.width = canvas.parentElement.offsetWidth;
-                height = canvas.height = canvas.parentElement.offsetHeight;
-            }
+        async function typeCode() {
+            if (!codeContainer) return;
+            codeContainer.innerHTML = '';
 
-            window.addEventListener('resize', resize);
+            // Initial cursor
+            const initialLine = document.createElement('div');
+            initialLine.className = 'flex items-center';
+            initialLine.appendChild(cursorElement);
+            codeContainer.appendChild(initialLine);
 
-            // Initial sizing
-            resize();
-
-            // Mouse listeners
-            canvas.addEventListener('mousemove', (e) => {
-                const rect = canvas.getBoundingClientRect();
-                mouse.x = e.clientX - rect.left;
-                mouse.y = e.clientY - rect.top;
-            });
-
-            canvas.addEventListener('mouseleave', () => {
-                mouse.x = null;
-                mouse.y = null;
-            });
-
-            // Particle Class
-            class Particle {
-                constructor() {
-                    this.x = Math.random() * width;
-                    this.y = Math.random() * height;
-                    this.vx = (Math.random() - 0.5) * 1.5; // Velocity X
-                    this.vy = (Math.random() - 0.5) * 1.5; // Velocity Y
-                    this.size = Math.random() * 2 + 1;
-                    // Random tech colors: mainly cyan/blue, some purple
-                    const colors = ['#38bdf8', '#818cf8', '#22d3ee', '#64748b'];
-                    this.color = colors[Math.floor(Math.random() * colors.length)];
+            for (let line of codeLines) {
+                // Remove cursor from previous position
+                if (cursorElement.parentNode) {
+                    cursorElement.parentNode.removeChild(cursorElement);
                 }
 
-                update() {
-                    this.x += this.vx;
-                    this.y += this.vy;
+                // Handle Spacer
+                if (line === null) {
+                    const br = document.createElement('br');
+                    codeContainer.appendChild(br);
+                    continue;
+                }
 
-                    // Bounce off edges
-                    if (this.x < 0 || this.x > width) this.vx *= -1;
-                    if (this.y < 0 || this.y > height) this.vy *= -1;
+                // Create new line container (using div for flex layout to align cursor)
+                const p = document.createElement('div');
+                p.className = 'min-h-[1.5em] flex flex-wrap items-center'; // Flex to keep cursor aligned
+                codeContainer.appendChild(p);
 
-                    // Mouse Interaction (Attraction/Repulsion)
-                    // Let's make them slightly flee from mouse to create a clearing, or attract
-                    if (mouse.x != null) {
-                        let dx = mouse.x - this.x;
-                        let dy = mouse.y - this.y;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
+                // Add cursor to current line
+                p.appendChild(cursorElement);
 
-                        if (distance < mouseDistance) {
-                            const forceDirectionX = dx / distance;
-                            const forceDirectionY = dy / distance;
-                            const force = (mouseDistance - distance) / mouseDistance;
-                            const directionX = forceDirectionX * force * 2; // Strength
-                            const directionY = forceDirectionY * force * 2;
+                // Type out each segment in the line
+                for (let segment of line) {
+                    const span = document.createElement('span');
+                    span.className = segment.class;
+                    // Insert segment before cursor
+                    p.insertBefore(span, cursorElement);
 
-                            // To attract: +=, To repel: -=
-                            // Let's create a gentle "net" movement
-                            this.x -= directionX;
-                            this.y -= directionY;
-                        }
+                    for (let char of segment.text) {
+                        span.textContent += char;
+                        // Typing delay
+                        await new Promise(r => setTimeout(r, Math.random() * 20 + 30));
                     }
                 }
 
-                draw() {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                    ctx.fillStyle = this.color;
-                    ctx.fill();
-                }
+                // Small pause at end of line
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        // Start typewriter
+        setTimeout(typeCode, 800);
+
+        // --- Particle Network Animation Logic ---
+        const canvas = document.getElementById('homeCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        // Configuration
+        const particleCount = 100; // Number of dots
+        const connectionDistance = 150; // Max distance to draw line
+        const mouseDistance = 200; // Interaction radius
+
+        // Mouse state
+        let mouse = { x: null, y: null };
+
+        // Resize handler
+        function resize() {
+            width = canvas.width = canvas.parentElement.offsetWidth;
+            height = canvas.height = canvas.parentElement.offsetHeight;
+        }
+
+        window.addEventListener('resize', resize);
+
+        // Initial sizing
+        resize();
+
+        // Mouse listeners
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        // Particle Class
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1.5; // Velocity X
+                this.vy = (Math.random() - 0.5) * 1.5; // Velocity Y
+                this.size = Math.random() * 2 + 1;
+                // Random tech colors: mainly cyan/blue, some purple
+                const colors = ['#38bdf8', '#818cf8', '#22d3ee', '#64748b'];
+                this.color = colors[Math.floor(Math.random() * colors.length)];
             }
 
-            // Initialize particles
-            function initParticles() {
-                particles = [];
-                for (let i = 0; i < particleCount; i++) {
-                    particles.push(new Particle());
-                }
-            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
 
-            // Animation Loop
-            function animate() {
-                ctx.clearRect(0, 0, width, height);
+                // Bounce off edges
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
 
-                // Update and draw particles
-                for (let i = 0; i < particles.length; i++) {
-                    particles[i].update();
-                    particles[i].draw();
+                // Mouse Interaction (Attraction/Repulsion)
+                // Let's make them slightly flee from mouse to create a clearing, or attract
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
 
-                    // Draw connections
-                    for (let j = i; j < particles.length; j++) {
-                        let dx = particles[i].x - particles[j].x;
-                        let dy = particles[i].y - particles[j].y;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < mouseDistance) {
+                        const forceDirectionX = dx / distance;
+                        const forceDirectionY = dy / distance;
+                        const force = (mouseDistance - distance) / mouseDistance;
+                        const directionX = forceDirectionX * force * 2; // Strength
+                        const directionY = forceDirectionY * force * 2;
 
-                        if (distance < connectionDistance) {
-                            ctx.beginPath();
-                            // Opacity based on distance
-                            let opacity = 1 - (distance / connectionDistance);
-                            ctx.strokeStyle = `rgba(56, 189, 248, ${opacity * 0.4})`; // Sky blue lines
-                            ctx.lineWidth = 1;
-                            ctx.moveTo(particles[i].x, particles[i].y);
-                            ctx.lineTo(particles[j].x, particles[j].y);
-                            ctx.stroke();
-                        }
+                        // To attract: +=, To repel: -=
+                        // Let's create a gentle "net" movement
+                        this.x -= directionX;
+                        this.y -= directionY;
                     }
                 }
-                requestAnimationFrame(animate);
             }
 
-            // Start
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < particleCount; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        // Animation Loop
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+
+            // Update and draw particles
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+
+                // Draw connections
+                for (let j = i; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < connectionDistance) {
+                        ctx.beginPath();
+                        // Opacity based on distance
+                        let opacity = 1 - (distance / connectionDistance);
+                        ctx.strokeStyle = `rgba(56, 189, 248, ${opacity * 0.4})`; // Sky blue lines
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Start
+        initParticles();
+        animate();
+
+        // Handle Resize regeneration to keep density consistent
+        window.addEventListener('resize', () => {
             initParticles();
-            animate();
+        });
 
-            // Handle Resize regeneration to keep density consistent
-            window.addEventListener('resize', () => {
-                initParticles();
-            });
+        // Simple login feedback
+        function handleLogin() {
+            const btn = document.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
 
-            // Simple login feedback
-            function handleLogin() {
-                const btn = document.querySelector('button[type="submit"]');
-                const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ACCESSING...`;
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
 
-                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> ACCESSING...`;
-                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            setTimeout(() => {
+                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> ACCESS GRANTED`;
+                btn.classList.replace('bg-sky-600', 'bg-emerald-600');
+                btn.classList.remove('shadow-[0_0_15px_rgba(14,165,233,0.3)]');
+                btn.classList.add('shadow-[0_0_15px_rgba(16,185,129,0.3)]');
 
-                setTimeout(() => {
-                    btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> ACCESS GRANTED`;
-                    btn.classList.replace('bg-sky-600', 'bg-emerald-600');
-                    btn.classList.remove('shadow-[0_0_15px_rgba(14,165,233,0.3)]');
-                    btn.classList.add('shadow-[0_0_15px_rgba(16,185,129,0.3)]');
-
-                    // Add success message to "terminal"
-                    const term = document.querySelector('.bg-black');
-                    const p = document.createElement('p');
-                    p.className = "text-emerald-400";
-                    p.innerHTML = `> Auth token received. Redirecting...`;
-                    term.insertBefore(p, term.lastElementChild);
-                }, 1500);
-            }
-        </script>
+                // Add success message to "terminal"
+                const term = document.querySelector('.bg-black');
+                const p = document.createElement('p');
+                p.className = "text-emerald-400";
+                p.innerHTML = `> Auth token received. Redirecting...`;
+                term.insertBefore(p, term.lastElementChild);
+            }, 1500);
+        }
+    </script>
 </body>
 
 </html>

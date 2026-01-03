@@ -62,7 +62,7 @@
 
         <!-- Login Button -->
         <div class="flex flex-col items-center gap-4">
-            <a href="login_page.html"
+            <a href="pages/index.php"
                 class="group relative px-10 py-4 bg-slate-900/80 backdrop-blur-md text-sky-400 font-mono font-bold text-xl rounded-full border border-sky-500/30 hover:border-sky-400 hover:text-white hover:shadow-[0_0_30px_rgba(56,189,248,0.4)] transition-all duration-300 overflow-hidden ring-1 ring-sky-900/50">
                 <span class="relative z-10 flex items-center gap-3">
                     <i class="fa-solid fa-power-off text-sm group-hover:animate-pulse"></i>
