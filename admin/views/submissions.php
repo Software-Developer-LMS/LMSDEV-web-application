@@ -11,23 +11,7 @@ $assignment_id = intval($_GET['assignment_id']);
 
 // --- HANDLE GRADING SUBMISSION ---
 // --- HANDLE GRADING SUBMISSION ---
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['submit_grade'])) {
-    $sub_id = intval($_POST['submission_id']);
-    $marks = intval($_POST['marks']);
-    $feedback = $_POST['feedback'];
-    $graded_at = date('Y-m-d H:i:s');
-
-    $grade_sql = "UPDATE submissions SET marks = ?, feedback = ?, graded_at = ? WHERE id = ?";
-    $stmt = $conn->prepare($grade_sql);
-    $stmt->bind_param("issi", $marks, $feedback, $graded_at, $sub_id);
-
-    if ($stmt->execute()) {
-        echo "<script>window.location.href='?page=submissions&assignment_id=$assignment_id&msg=graded';</script>";
-        exit;
-    } else {
-        $error = "Error saving grade: " . $stmt->error;
-    }
-}
+// Logic moved to actions/submission_actions.php
 
 // Fetch Assignment Details
 $assign_sql = "SELECT * FROM assignments WHERE id = $assignment_id";
@@ -210,8 +194,9 @@ if (!$result) {
                 class="text-white font-bold"></span>
         </p>
 
-        <form method="POST">
+        <form method="POST" action="actions/submission_actions.php">
             <input type="hidden" name="submission_id" id="gradeSubmissionId">
+            <input type="hidden" name="assignment_id" value="<?php echo $assignment_id; ?>">
 
             <div class="mb-4">
                 <label class="block text-xs text-gray-500 mb-1 uppercase">XP Allocation (0-100)</label>

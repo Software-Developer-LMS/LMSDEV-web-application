@@ -3,3 +3,8 @@ php_value post_max_size 128M
 php_value memory_limit 256M
 php_value max_execution_time 300
 php_value max_input_time 300
+
+# Custom Error Pages
+ErrorDocument 403 /LMSDEV-web-application/error.php?code=403
+ErrorDocument 404 /LMSDEV-web-application/error.php?code=404
+ErrorDocument 500 /LMSDEV-web-application/error.php?code=500

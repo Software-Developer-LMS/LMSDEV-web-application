@@ -2,40 +2,7 @@
 // Include DB Connection
 include '../includes/db_connection.php';
 
-// Handle Add/Update Module
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['add_module'])) {
-        $title = $_POST['module_title'];
-        $desc = $_POST['description'];
-        $order = $_POST['order_no'];
-
-        $sql = "INSERT INTO modules (module_title, description, order_no) VALUES ('$title', '$desc', '$order')";
-        if ($conn->query($sql) === TRUE) {
-            $msg = "Module initialized.";
-        } else {
-            $error = "Error: " . $conn->error;
-        }
-    } elseif (isset($_POST['update_module'])) {
-        $id = intval($_POST['id']);
-        $title = $_POST['module_title'];
-        $desc = $_POST['description'];
-        $order = $_POST['order_no'];
-
-        $sql = "UPDATE modules SET module_title='$title', description='$desc', order_no='$order' WHERE id=$id";
-        if ($conn->query($sql) === TRUE) {
-            echo "<script>window.location.href='?page=modules&msg=updated';</script>";
-        } else {
-            $error = "Error: " . $conn->error;
-        }
-    }
-}
-
-// Handle Delete Module
-if (isset($_GET['delete_id'])) {
-    $id = intval($_GET['delete_id']);
-    $conn->query("DELETE FROM modules WHERE id=$id");
-    echo "<script>window.location.href='?page=modules';</script>";
-}
+// Logic moved to actions/module_actions.php
 
 // Fetch Modules
 $result = $conn->query("SELECT * FROM modules ORDER BY order_no ASC");
@@ -58,10 +25,17 @@ if (isset($_GET['edit_id'])) {
         </a>
     </div>
 
-    <?php if (isset($msg) || isset($_GET['msg'])): ?>
-        <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
-            > SUCCESS: <?php echo isset($msg) ? $msg : "Module recompiled successfully."; ?>
-        </div>
+    <?php if (isset($_GET['msg']) || isset($_GET['error'])): ?>
+        <?php if (isset($_GET['msg'])): ?>
+            <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
+                > SUCCESS: <?php echo htmlspecialchars($_GET['msg']); ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="p-4 border border-red-500/50 bg-red-500/10 text-red-500 text-xs font-mono">
+                > ERROR: <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -84,7 +58,7 @@ if (isset($_GET['edit_id'])) {
                     <div class="flex gap-2">
                         <a href="?page=modules&edit_id=<?php echo $row['id']; ?>"
                             class="text-nexus-purple hover:text-white"><i class="fa-solid fa-pen"></i></a>
-                        <a href="?page=modules&delete_id=<?php echo $row['id']; ?>"
+                        <a href="actions/module_actions.php?delete_id=<?php echo $row['id']; ?>"
                             onclick="return confirm('Decompile this module?')" class="text-nexus-red hover:text-white"><i
                                 class="fa-solid fa-trash"></i></a>
                     </div>
@@ -102,7 +76,7 @@ if (isset($_GET['edit_id'])) {
             <?php echo $edit_module ? 'Recompile Module' : 'Compile New Module'; ?>
         </h3>
 
-        <form method="POST" class="space-y-4" action="?page=modules">
+        <form method="POST" class="space-y-4" action="actions/module_actions.php">
             <?php if ($edit_module): ?>
                 <input type="hidden" name="id" value="<?php echo $edit_module['id']; ?>">
             <?php endif; ?>
