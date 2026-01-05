@@ -79,6 +79,16 @@ $result = $conn->query($sql);
                     <div class="text-sm text-nexus-blue mb-4 font-mono">
                         <?php echo $row['module_title']; ?>
                     </div>
+
+                    <?php if (!empty($row['assignment_file'])): ?>
+                        <div class="mb-4">
+                            <a href="../uploads/assignments/<?php echo $row['assignment_file']; ?>" download
+                                class="inline-flex items-center gap-2 bg-nexus-blue/10 border border-nexus-blue text-nexus-blue px-3 py-1.5 rounded hover:bg-nexus-blue hover:text-black transition-colors text-xs font-bold font-mono uppercase tracking-wider">
+                                <i class="fas fa-file-pdf"></i> Download Reference PDF
+                            </a>
+                        </div>
+                    <?php endif; ?>
+
                     <p class="text-gray-400 text-sm mb-6 line-clamp-3">
                         <?php echo $row['description']; ?>
                     </p>
@@ -216,3 +226,4 @@ $result = $conn->query($sql);
         }
     });
 </script>
+

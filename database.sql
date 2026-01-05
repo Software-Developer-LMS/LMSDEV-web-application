@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jan 03, 2026 at 02:55 AM
+-- Generation Time: Jan 03, 2026 at 01:00 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -47,8 +47,16 @@ CREATE TABLE `assignments` (
   `title` varchar(255) NOT NULL,
   `description` text DEFAULT NULL,
   `deadline` datetime NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `assignment_file` varchar(255) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `assignments`
+--
+
+INSERT INTO `assignments` (`id`, `module_id`, `title`, `description`, `deadline`, `created_at`, `assignment_file`) VALUES
+(10, 4, 'dajbdjadhba', 'qwsqwqw', '2026-01-06 16:55:00', '2026-01-03 11:26:35', '1767439595_6958fceb4f1f0.pdf');
 
 -- --------------------------------------------------------
 
@@ -133,7 +141,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `student_id`, `name`, `email`, `profile_photo`, `password`, `role`, `change_password`, `status`, `created_at`, `legacy_xp`) VALUES
 (1, NULL, 'System Admin', 'admin@lms.com', NULL, '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', 0, 'active', '2026-01-02 15:57:28', 0),
-(5, '23', 'Chamika ', 'student@lms.com', NULL, '$2y$10$mLens2.LvnB0jVfpjeWByet6j999AY3hzV2.84sct4eXTqCop7I2S', 'student', 0, 'active', '2026-01-02 21:13:37', 30);
+(5, '23', 'Chamika ', 'student@lms.com', NULL, '$2y$10$KcT2dFoiRtL4/nX9f3HjMe62wXEm1RkPS4pZFbJcKqMgfj/50388W', 'student', 0, 'active', '2026-01-02 21:13:37', 90);
 
 --
 -- Indexes for dumped tables
@@ -194,7 +202,7 @@ ALTER TABLE `announcements`
 -- AUTO_INCREMENT for table `assignments`
 --
 ALTER TABLE `assignments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `lessons`
@@ -212,7 +220,7 @@ ALTER TABLE `modules`
 -- AUTO_INCREMENT for table `submissions`
 --
 ALTER TABLE `submissions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `users`

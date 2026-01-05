@@ -1,74 +1,7 @@
 <?php
 include '../includes/db_connection.php';
 
-// Handle Add/Update Assignment
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['add_assignment'])) {
-        $module_id = $_POST['module_id'];
-        $title = $_POST['title'];
-        $desc = $_POST['description'];
-        $deadline = $_POST['deadline'];
-
-        $sql = "INSERT INTO assignments (module_id, title, description, deadline) 
-                VALUES ('$module_id', '$title', '$desc', '$deadline')";
-
-        if ($conn->query($sql) === TRUE) {
-            $msg = "Objective set.";
-        }
-    } elseif (isset($_POST['update_assignment'])) {
-        $id = intval($_POST['id']);
-        $module_id = $_POST['module_id'];
-        $title = $_POST['title'];
-        $desc = $_POST['description'];
-        $deadline = $_POST['deadline'];
-
-        $sql = "UPDATE assignments SET module_id='$module_id', title='$title', description='$desc', deadline='$deadline' WHERE id=$id";
-
-        if ($conn->query($sql) === TRUE) {
-            echo "<script>window.location.href='?page=assignments&msg=updated';</script>";
-        } else {
-            $error = "Error: " . $conn->error;
-        }
-    }
-}
-
-// Handle Delete Assignment
-// Handle Delete Assignment
-if (isset($_GET['delete_id'])) {
-    $id = intval($_GET['delete_id']);
-
-    // 1. Fetch all submission files associated with this assignment
-    $sub_sql = "SELECT user_id, marks, file_path FROM submissions WHERE assignment_id = $id";
-    $sub_res = $conn->query($sub_sql);
-
-    if ($sub_res->num_rows > 0) {
-        while ($sub_row = $sub_res->fetch_assoc()) {
-            // A. Preserve XP (Add to legacy_xp)
-            if (!empty($sub_row['marks']) && $sub_row['marks'] > 0) {
-                $uid = $sub_row['user_id'];
-                $marks = intval($sub_row['marks']);
-                $conn->query("UPDATE users SET legacy_xp = legacy_xp + $marks WHERE id = $uid");
-            }
-
-            // B. Delete File
-            if (!empty($sub_row['file_path'])) {
-                $file_full_path = '../uploads/' . $sub_row['file_path'];
-                if (file_exists($file_full_path)) {
-                    unlink($file_full_path); // Delete file from server
-                }
-            }
-        }
-    }
-
-    // 2. Delete the assignment (Submissions will cascade delete via FK or be orphaned if no cascade, but files are gone)
-    // Note: If FK constraints aren't set up for Cascade, we should delete submissions rows too manually.
-    // Assuming standard practice, let's clean up rows just in case.
-    $conn->query("DELETE FROM submissions WHERE assignment_id=$id");
-
-    // 3. Delete Assignment
-    $conn->query("DELETE FROM assignments WHERE id=$id");
-    echo "<script>window.location.href='?page=assignments';</script>";
-}
+// Logic moved to actions/assignment_actions.php
 
 // Fetch Assignments
 $sql = "SELECT a.*, m.module_title FROM assignments a JOIN modules m ON a.module_id = m.id ORDER BY a.deadline ASC";
@@ -95,10 +28,17 @@ if (isset($_GET['edit_id'])) {
         </a>
     </div>
 
-    <?php if (isset($msg) || isset($_GET['msg'])): ?>
-        <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
-            > SUCCESS: <?php echo isset($msg) ? $msg : "Objective updated successfully."; ?>
-        </div>
+    <?php if (isset($_GET['msg']) || isset($_GET['error'])): ?>
+        <?php if (isset($_GET['msg'])): ?>
+            <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
+                > SUCCESS: <?php echo htmlspecialchars($_GET['msg']); ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="p-4 border border-red-500/50 bg-red-500/10 text-red-500 text-xs font-mono">
+                > ERROR: <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -151,7 +91,7 @@ if (isset($_GET['edit_id'])) {
                         </a>
                         <a href="?page=assignments&edit_id=<?php echo $row['id']; ?>"
                             class="flex-1 bg-gray-800 hover:bg-white text-gray-400 hover:text-black py-1 rounded transition-colors uppercase text-[10px] font-bold text-center">Modify</a>
-                        <a href="?page=assignments&delete_id=<?php echo $row['id']; ?>"
+                        <a href="actions/assignment_actions.php?delete_id=<?php echo $row['id']; ?>"
                             onclick="return confirm('Abort mission directive?')"
                             class="px-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded transition-colors flex items-center justify-center"><i
                                 class="fa-solid fa-trash"></i></a>
@@ -170,7 +110,7 @@ if (isset($_GET['edit_id'])) {
             <?php echo $edit_assign ? 'Modify Assessment' : 'New Assessment'; ?>
         </h3>
 
-        <form method="POST" class="space-y-4" action="?page=assignments">
+        <form method="POST" class="space-y-4" action="actions/assignment_actions.php" enctype="multipart/form-data">
             <?php if ($edit_assign): ?>
                 <input type="hidden" name="id" value="<?php echo $edit_assign['id']; ?>">
             <?php endif; ?>
@@ -205,6 +145,19 @@ if (isset($_GET['edit_id'])) {
                 <label class="block text-xs text-gray-500 mb-1 uppercase">Detailed Instructions</label>
                 <textarea name="description"
                     class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-blue focus:outline-none font-mono text-xs h-24"><?php echo $edit_assign ? $edit_assign['description'] : ''; ?></textarea>
+            </div>
+
+            <div>
+                <label class="block text-xs text-gray-500 mb-1 uppercase">Reference Material (PDF - Optional)</label>
+                <input type="file" name="assignment_file" accept=".pdf"
+                    class="w-full bg-nexus-dark border border-gray-700 rounded p-2 text-white focus:border-nexus-blue focus:outline-none font-mono text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-nexus-blue/10 file:text-nexus-blue hover:file:bg-nexus-blue/20">
+                <?php if ($edit_assign && $edit_assign['assignment_file']): ?>
+                    <div class="mt-1 text-xs text-nexus-green">
+                        Current file: <a href="../uploads/assignments/<?php echo $edit_assign['assignment_file']; ?>"
+                            target="_blank"
+                            class="underline hover:text-white"><?php echo $edit_assign['assignment_file']; ?></a>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <div class="flex gap-4 mt-6">

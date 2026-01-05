@@ -1,95 +1,7 @@
 <?php
 include '../includes/db_connection.php';
 
-// Handle Add/Update Lesson
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $notes_file = null;
-
-    // File Upload Handler
-    if (isset($_FILES['notes_file']) && $_FILES['notes_file']['error'] == 0) {
-        $allowed = ['pdf'];
-        $ext = strtolower(pathinfo($_FILES['notes_file']['name'], PATHINFO_EXTENSION));
-
-        if (in_array($ext, $allowed)) {
-            $new_name = uniqid('note_') . '.pdf';
-            if (move_uploaded_file($_FILES['notes_file']['tmp_name'], '../uploads/' . $new_name)) {
-                $notes_file = $new_name;
-            }
-        }
-    }
-
-    if (isset($_POST['add_lesson'])) {
-        $module_id = $_POST['module_id'];
-        $title = $_POST['lesson_title'];
-        $date = $_POST['class_date'];
-        $start = $_POST['start_time'];
-        $end = $_POST['end_time'];
-        $loc = $_POST['location'];
-        $desc = $_POST['description'];
-
-        $sql = "INSERT INTO lessons (module_id, lesson_title, class_date, start_time, end_time, location, description, notes_file) 
-                VALUES ('$module_id', '$title', '$date', '$start', '$end', '$loc', '$desc', '$notes_file')";
-
-        if ($conn->query($sql) === TRUE) {
-            $msg = "Lesson scheduled.";
-        }
-    } elseif (isset($_POST['update_lesson'])) {
-        $id = intval($_POST['id']);
-        $module_id = $_POST['module_id'];
-        $title = $_POST['lesson_title'];
-        $date = $_POST['class_date'];
-        $start = $_POST['start_time'];
-        $end = $_POST['end_time'];
-        $loc = $_POST['location'];
-        $desc = $_POST['description'];
-
-        $sql = "UPDATE lessons SET module_id='$module_id', lesson_title='$title', class_date='$date', 
-                start_time='$start', end_time='$end', location='$loc', description='$desc'";
-
-        if ($notes_file) {
-            // Delete old file if exists
-            $old_sql = "SELECT notes_file FROM lessons WHERE id=$id";
-            $old_res = $conn->query($old_sql);
-            if ($old_res && $old_row = $old_res->fetch_assoc()) {
-                if (!empty($old_row['notes_file'])) {
-                    $old_path = '../uploads/' . $old_row['notes_file'];
-                    if (file_exists($old_path)) {
-                        unlink($old_path);
-                    }
-                }
-            }
-            $sql .= ", notes_file='$notes_file'";
-        }
-
-        $sql .= " WHERE id=$id";
-
-        if ($conn->query($sql) === TRUE) {
-            echo "<script>window.location.href='?page=lessons&msg=updated';</script>";
-        } else {
-            $error = "Error: " . $conn->error;
-        }
-    }
-}
-
-// Handle Delete Lesson
-if (isset($_GET['delete_id'])) {
-    $id = intval($_GET['delete_id']);
-
-    // Delete associated notes file
-    $check_sql = "SELECT notes_file FROM lessons WHERE id=$id";
-    $check_res = $conn->query($check_sql);
-    if ($check_res && $lesson = $check_res->fetch_assoc()) {
-        if (!empty($lesson['notes_file'])) {
-            $file_path = '../uploads/' . $lesson['notes_file'];
-            if (file_exists($file_path)) {
-                unlink($file_path);
-            }
-        }
-    }
-
-    $conn->query("DELETE FROM lessons WHERE id=$id");
-    echo "<script>window.location.href='?page=lessons';</script>";
-}
+// Logic moved to actions/lesson_actions.php
 
 // Fetch Lessons joined with Modules
 $sql = "SELECT l.*, m.module_title FROM lessons l JOIN modules m ON l.module_id = m.id ORDER BY l.class_date DESC";
@@ -116,10 +28,17 @@ if (isset($_GET['edit_id'])) {
         </a>
     </div>
 
-    <?php if (isset($msg) || isset($_GET['msg'])): ?>
-        <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
-            > SUCCESS: <?php echo isset($msg) ? $msg : "Protocol updated successfully."; ?>
-        </div>
+    <?php if (isset($_GET['msg']) || isset($_GET['error'])): ?>
+        <?php if (isset($_GET['msg'])): ?>
+            <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
+                > SUCCESS: <?php echo htmlspecialchars($_GET['msg']); ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="p-4 border border-red-500/50 bg-red-500/10 text-red-500 text-xs font-mono">
+                > ERROR: <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 
     <div class="holo-card rounded-xl overflow-hidden">
@@ -155,7 +74,7 @@ if (isset($_GET['edit_id'])) {
                         <td class="px-6 py-4">
                             <a href="?page=lessons&edit_id=<?php echo $row['id']; ?>"
                                 class="text-nexus-red hover:text-white mr-2"><i class="fa-solid fa-pen-to-square"></i></a>
-                            <a href="?page=lessons&delete_id=<?php echo $row['id']; ?>"
+                            <a href="actions/lesson_actions.php?delete_id=<?php echo $row['id']; ?>"
                                 onclick="return confirm('Cancel this protocol?')" class="text-nexus-red hover:text-white"><i
                                     class="fa-solid fa-trash"></i></a>
                         </td>
@@ -174,7 +93,7 @@ if (isset($_GET['edit_id'])) {
             <?php echo $edit_lesson ? 'Modify Session Protocol' : 'Initialize New Session'; ?>
         </h3>
 
-        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4" action="?page=lessons"
+        <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4" action="actions/lesson_actions.php"
             enctype="multipart/form-data">
             <?php if ($edit_lesson): ?>
                 <input type="hidden" name="id" value="<?php echo $edit_lesson['id']; ?>">

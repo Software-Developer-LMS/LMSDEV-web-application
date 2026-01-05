@@ -1,40 +1,7 @@
 <?php
 include '../includes/db_connection.php';
 
-// Handle Add/Update Announcement
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    if (isset($_POST['add_announcement'])) {
-        $title = $_POST['title'];
-        $type = $_POST['type'];
-        $msg = $_POST['message'];
-
-        $sql = "INSERT INTO announcements (title, type, message) VALUES ('$title', '$type', '$msg')";
-
-        if ($conn->query($sql) === TRUE) {
-            $success = "Broadcast sent.";
-        }
-    } elseif (isset($_POST['update_announcement'])) {
-        $id = intval($_POST['id']);
-        $title = $_POST['title'];
-        $type = $_POST['type'];
-        $msg = $_POST['message'];
-
-        $sql = "UPDATE announcements SET title='$title', type='$type', message='$msg' WHERE id=$id";
-
-        if ($conn->query($sql) === TRUE) {
-            echo "<script>window.location.href='?page=announcements&msg=updated';</script>";
-        } else {
-            $error = "Error: " . $conn->error;
-        }
-    }
-}
-
-// Handle Delete Announcement
-if (isset($_GET['delete_id'])) {
-    $id = intval($_GET['delete_id']);
-    $conn->query("DELETE FROM announcements WHERE id=$id");
-    echo "<script>window.location.href='?page=announcements';</script>";
-}
+// Logic moved to actions/announcement_actions.php
 
 // Fetch Announcements
 $result = $conn->query("SELECT * FROM announcements ORDER BY created_at DESC");
@@ -57,10 +24,17 @@ if (isset($_GET['edit_id'])) {
         </a>
     </div>
 
-    <?php if (isset($success) || isset($_GET['msg'])): ?>
-        <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
-            > SUCCESS: <?php echo isset($success) ? $success : "Broadcast updated successfully."; ?>
-        </div>
+    <?php if (isset($_GET['msg']) || isset($_GET['error'])): ?>
+        <?php if (isset($_GET['msg'])): ?>
+            <div class="p-4 border border-nexus-green/50 bg-nexus-green/10 text-nexus-green text-xs font-mono">
+                > SUCCESS: <?php echo htmlspecialchars($_GET['msg']); ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_GET['error'])): ?>
+            <div class="p-4 border border-red-500/50 bg-red-500/10 text-red-500 text-xs font-mono">
+                > ERROR: <?php echo htmlspecialchars($_GET['error']); ?>
+            </div>
+        <?php endif; ?>
     <?php endif; ?>
 
     <!-- Feed -->
@@ -111,7 +85,7 @@ if (isset($_GET['edit_id'])) {
                 <div class="flex flex-col gap-2">
                     <a href="?page=announcements&edit_id=<?php echo $row['id']; ?>"
                         class="text-gray-600 hover:text-white self-center"><i class="fa-solid fa-pen"></i></a>
-                    <a href="?page=announcements&delete_id=<?php echo $row['id']; ?>"
+                    <a href="actions/announcement_actions.php?delete_id=<?php echo $row['id']; ?>"
                         onclick="return confirm('Cease broadcast?')"
                         class="text-gray-600 hover:text-nexus-red transition-colors self-center"><i
                             class="fa-solid fa-xmark"></i></a>
@@ -129,7 +103,7 @@ if (isset($_GET['edit_id'])) {
             <?php echo $edit_announce ? 'Modify Broadcast' : 'Inject System Message'; ?>
         </h3>
 
-        <form method="POST" class="space-y-4" action="?page=announcements">
+        <form method="POST" class="space-y-4" action="actions/announcement_actions.php">
             <?php if ($edit_announce): ?>
                 <input type="hidden" name="id" value="<?php echo $edit_announce['id']; ?>">
             <?php endif; ?>
