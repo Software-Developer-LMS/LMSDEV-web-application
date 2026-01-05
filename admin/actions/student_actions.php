@@ -14,8 +14,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $raw_password = $_POST['password']; // Capture raw password for SMS
         $password = password_hash($raw_password, PASSWORD_DEFAULT);
 
+        // Check for duplicate email or student_id
+        $check_sql = "SELECT id FROM users WHERE email = '$email' OR student_id = '$student_id'";
+        $check_result = $conn->query($check_sql);
+        if ($check_result->num_rows > 0) {
+            $error_msg = "Error: Student with this Email or Student ID already exists.";
+            header("Location: $base_url&error=" . urlencode($error_msg));
+            exit();
+        }
+
         $sql = "INSERT INTO users (student_id, name, email, mobile_number, password, role) VALUES ('$student_id', '$name', '$email', '$mobile_number', '$password', 'student')";
-        if ($conn->query($sql) === TRUE) {
+        
+        try {
+            if ($conn->query($sql) === TRUE) {
             $success_msg = "Student added successfully.";
 
             // --- SMS SENDING CODE (START) ---
@@ -90,6 +101,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         } else {
             $error_msg = "Error: " . $conn->error;
+            header("Location: $base_url&error=" . urlencode($error_msg));
+            exit();
+        }
+        } catch (mysqli_sql_exception $e) {
+            $error_msg = "Error: Duplicate entry or database error. " . $e->getMessage();
             header("Location: $base_url&error=" . urlencode($error_msg));
             exit();
         }

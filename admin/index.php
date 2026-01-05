@@ -12,7 +12,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'admin') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infralyx Admin Panel | v3.1.0</title>
+    <title>LumnixSolutions Admin Panel | v3.1.0</title>
 
     <!-- FONTS: JetBrains Mono (Code) & Rajdhani (Headers) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -197,7 +197,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'admin') {
     <!-- BOOT SEQUENCE (JS Controlled) -->
     <div id="boot-sequence" class="fixed inset-0 z-[100] bg-nexus-black flex flex-col items-center justify-center">
         <div class="w-96 space-y-2">
-            <div id="boot-1" class="text-nexus-blue hidden">[SYSTEM] Infralyx Admin Panel v3.1.0 initializing...</div>
+            <div id="boot-1" class="text-nexus-blue hidden">[SYSTEM] LumnixSolutions Admin Panel v3.1.0 initializing...</div>
             <div id="boot-2" class="text-nexus-green hidden">> Loading modules... OK</div>
             <div id="boot-3" class="text-nexus-green hidden">> Establishing secure link... OK</div>
             <div id="boot-4" class="text-white font-bold mt-4 hidden tracking-widest">ACCESS GRANTED</div>
@@ -321,7 +321,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] != 'admin') {
                 class="h-16 border-b border-gray-800 bg-nexus-black/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0">
                 <div class="flex items-center gap-4">
                     <h1 class="text-xl font-header tracking-widest text-white uppercase glitch-hover cursor-default">
-                        Infralyx<span class="text-nexus-blue">Panel</span>
+                        LumnixSolutions<span class="text-nexus-blue">Panel</span>
                     </h1>
                     <div class="h-4 w-px bg-gray-700"></div>
                     <button onclick="toggleCmd()"
